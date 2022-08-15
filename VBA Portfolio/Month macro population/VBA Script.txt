@@ -1,0 +1,21 @@
+Option Explicit
+
+Sub Row_Population()
+
+    Dim Month As Long
+    Month = WorksheetFunction.RandBetween(1, 12)
+    
+    Sheet1.Range("C4") = Month
+    Sheet1.Range("C4").Offset(0, Month) = Month
+    
+End Sub
+
+Sub Column_Population()
+    
+    Dim Month As Long
+    Month = WorksheetFunction.RandBetween(1, 12)
+    
+    Sheet2.Range("A4") = Month
+    Sheet2.Range("A4").Offset(Month - 3, 3) = Month
+    
+End Sub

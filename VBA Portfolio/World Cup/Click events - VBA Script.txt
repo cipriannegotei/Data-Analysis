@@ -1,0 +1,9 @@
+Option Explicit
+
+Public Sub GenerateReports_Click()
+    CreateReport
+End Sub
+
+Public Sub ClearReport_Click()
+    ClearReportArea
+End Sub

@@ -1,0 +1,144 @@
+'Team Results
+
+Option Explicit
+
+'Data sheet constants
+Const DATA_RANGE_START As String = "A1"
+Const COL_DATA_MATCHNO As String = "A"
+Const COL_DATA_TEAM1 As String = "E"
+Const COL_DATA_SCORE1 As String = "F"
+Const COL_DATA_SCORE2 As String = "G"
+Const COL_DATA_TEAM2 As String = "I"
+Const COL_DATA_STAGE As String = "K"
+
+'Report sheet constants
+Const REPORT_RANGE_START As String = "E2"
+Const REPORT_RANGE_CLEAR As String = "E3:Z1000"
+Const COL_REP_MATCHNO As String = "E"
+Const COL_REP_TEAM1 As String = "I"
+Const COL_REP_SCORE1 As String = "J"
+Const COL_REP_SCORE2 As String = "K"
+Const COL_REP_TEAM2 As String = "M"
+Const COL_REP_STAGE As String = "O"
+Const ROW_REP_START As Long = 3
+
+Public Sub CreateReport()
+
+    TurnOffFunctionality
+    
+    ClearReportArea
+    
+    CreateTeamResults
+    
+    TurnOnFunctionality
+    
+End Sub
+
+Public Sub TurnOffFunctionality()
+
+    'Turn off automatic calculations, events and screen updating
+    With Application
+        .Calculation = xlCalculationManual
+        .DisplayStatusBar = False
+        .EnableEvents = False
+        .ScreenUpdating = False
+    End With
+    
+End Sub
+
+Public Sub ClearReportArea()
+
+    cnReport.Range(REPORT_RANGE_CLEAR).ClearContents
+    
+End Sub
+
+Public Sub CreateTeamResults()
+
+    'Get user settings from worksheet
+    Dim sYear As String, sWorkbook As String, sUserTeam As String
+    sYear = cnReport.Range("C4")
+    sWorkbook = cnReport.Range("C5")
+    sUserTeam = cnReport.Range("C6")
+
+    'Get the filenames
+    Dim sFileName As String
+    sFileName = ThisWorkbook.Path & "\" & sWorkbook
+    
+    'Check if the file exists
+    If Dir(sFileName) = "" Then
+        MsgBox "Could not find the workbook: [" & sFileName & "]. Please check this file is in the current folder."
+        Exit Sub
+    End If
+    
+    'Open Workbook
+    Dim wkBook As Workbook, shData As Worksheet
+    Set wkBook = Workbooks.Open(Filename:=sFileName, ReadOnly:=True)
+    
+    'Get the Worksheet - This is the year in C4
+    Set shData = wkBook.Worksheets(sYear)
+    
+    'Get the data range
+    Dim rgData As Range
+    Set rgData = shData.Range(DATA_RANGE_START).CurrentRegion
+    
+    'Select the current area without the top row
+    Set rgData = rgData.Offset(1, 0).Resize(rgData.Rows.Count - 1)
+    
+    'Create the team name variables
+    Dim sTeam1 As String, sTeam2 As String
+    
+    'Use a variable to store the current row we are writing to
+    Dim rowRep As Long
+    rowRep = ROW_REP_START
+        
+    'Go through each row
+    Dim rgCurRow As Range
+    For Each rgCurRow In rgData.Rows
+        
+        'Read team names
+        sTeam1 = rgCurRow.Cells(1, COL_DATA_TEAM1)
+        sTeam2 = rgCurRow.Cells(1, COL_DATA_TEAM2)
+        
+        'If match has team we are looking for then do the following tasks
+        If StrComp(sTeam1, sUserTeam, vbTextCompare) = 0 _
+            Or StrComp(sTeam2, sUserTeam, vbTextCompare) = 0 Then
+            
+                'Get the range on the report sheet to write to
+                Dim rgDest As Range
+                Set rgDest = cnReport.Range(cnReport.Cells(rowRep, COL_REP_MATCHNO) _
+                    , cnReport.Cells(rowRep, COL_REP_STAGE))
+                    
+                'Write the values from data to report
+                rgDest.Value = rgCurRow.Value
+                
+                'Move to the next report row
+                rowRep = rowRep + 1
+                
+                            
+        End If
+        
+        
+    Next rgCurRow
+    
+    'Inform the user if no matches were found
+    If rowRep = ROW_REP_START Then
+        MsgBox "No matches were found for team " & sUserTeam & _
+            " in the World Cup for year " & sYear & "."
+    End If
+        
+    'Close the workbook
+    wkBook.Close
+    
+        
+    
+End Sub
+
+Public Sub TurnOnFunctionality()
+    'Turn on automatic calculations, events and screen updating
+    With Application
+        .Calculation = xlCalculationAutomatic
+        .DisplayStatusBar = True
+        .EnableEvents = True
+        .ScreenUpdating = True
+    End With
+End Sub
